@@ -1,21 +1,333 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
     <meta charset="UTF-8">
     <title>Baskota.com</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+        }
+
+        .showcase-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            margin-bottom: 40px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .image-showcase {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .showcase-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .showcase-image.active {
+            opacity: 1;
+        }
+
+        .navigation-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .dot.active {
+            background: white;
+        }
+
+        .description-section {
+            background: rgba(255,255,255,0.95);
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .description-section h2 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .description-section p {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .showcase-container {
+                height: 250px;
+            }
+            
+            .description-section {
+                padding: 30px 20px;
+            }
+            
+            .description-section h2 {
+                font-size: 2rem;
+            }
+        }
     </style>
-    <script src=""></script>
-  <body>
-  
-    <img src="img_la.jpg" alt="LA" style="width:100%">
-    
-    <div class="">
-     <h1>This is a Heading</h1>
-     <p>This is a paragraph.</p>
-     <p>This is another paragraph.</p>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Welcome to Baskota.com</h1>
+        <p>Discover Amazing Experiences</p>
     </div>
-  
-  </body>
+
+    <div class="showcase-container">
+        <div class="image-showcase" id="imageShowcase">
+            <!-- Images will be dynamically loaded here -->
+        </div>
+        <div class="navigation-dots" id="navigationDots">
+            <!-- Dots will be dynamically generated here -->
+        </div>
+    </div>
+
+    <div class="description-section">
+      <h2>About Baskota</h2>
+      <p>Welcome to the showcase of Baskota, a handsome fella whose adventures take him to the most beautiful places around the world! This rotating gallery captures his journey through stunning locations.</p>
+      <p>Each image features Baskota in breathtaking settings, from serene landscapes to vibrant cityscapes, peaceful ocean views to majestic mountain ranges. Follow along as this charming gentleman explores the world's most captivating destinations.</p>
+      <p>Navigate through Baskota's photo collection using the dots below the showcase, or simply sit back and enjoy the automatic slideshow that changes every 4 seconds. Experience Baskota's adventures through visual storytelling at its finest.</p>
+    </div>
+
+    <script>
+        class ImageShowcase {
+            constructor() {
+                this.imageFolder = 'images/';
+                this.imageFiles = [
+                    'BaskotaAuraFarming.jpg',
+                    'BaskotaBald.png',
+                    'BaskotaFlippingOff.jpg',
+                    'BaskotaGreyHoodie1.jpg',
+                    'BaskotaGreyHoodie2.jpg',
+                    'BaskotaMonitor.jpg',
+                    'BaskotaPeaceSign.jpg'
+                    // Add more image filenames here as needed
+                ];
+                this.currentIndex = 0;
+                this.autoRotateInterval = null;
+                this.images = [];
+                this.dots = [];
+                
+                this.init();
+            }
+            
+            async init() {
+                await this.loadImages();
+                this.createNavigationDots();
+                this.setupEventListeners();
+                this.startAutoRotate();
+            }
+            
+            async loadImages() {
+                const imageShowcase = document.getElementById('imageShowcase');
+                
+                for (let i = 0; i < this.imageFiles.length; i++) {
+                    const img = document.createElement('img');
+                    img.src = this.imageFolder + this.imageFiles[i];
+                    img.alt = this.getImageAltText(this.imageFiles[i]);
+                    img.className = 'showcase-image';
+                    
+                    // Make first image active
+                    if (i === 0) {
+                        img.classList.add('active');
+                    }
+                    
+                    imageShowcase.appendChild(img);
+                    this.images.push(img);
+                }
+            }
+            
+            getImageAltText(filename) {
+                // Convert filename to readable alt text
+                return filename
+                    .replace(/\.(jpg|jpeg|png|gif|svg)$/i, '')
+                    .replace(/([A-Z])/g, ' $1')
+                    .replace(/^./, str => str.toUpperCase())
+                    .trim();
+            }
+            
+            createNavigationDots() {
+                const navigationDots = document.getElementById('navigationDots');
+                
+                for (let i = 0; i < this.images.length; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'dot';
+                    dot.setAttribute('data-index', i);
+                    
+                    // Make first dot active
+                    if (i === 0) {
+                        dot.classList.add('active');
+                    }
+                    
+                    navigationDots.appendChild(dot);
+                    this.dots.push(dot);
+                }
+            }
+            
+            setupEventListeners() {
+                // Add click listeners to dots
+                this.dots.forEach((dot, index) => {
+                    dot.addEventListener('click', () => {
+                        this.goToSlide(index);
+                    });
+                });
+                
+                // Pause auto rotation on hover
+                const showcase = document.querySelector('.showcase-container');
+                showcase.addEventListener('mouseenter', () => this.stopAutoRotate());
+                showcase.addEventListener('mouseleave', () => this.startAutoRotate());
+            }
+            
+            goToSlide(index) {
+                if (index < 0 || index >= this.images.length) return;
+                
+                // Remove active class from current image and dot
+                if (this.images[this.currentIndex]) {
+                    this.images[this.currentIndex].classList.remove('active');
+                }
+                if (this.dots[this.currentIndex]) {
+                    this.dots[this.currentIndex].classList.remove('active');
+                }
+                
+                // Update current index
+                this.currentIndex = index;
+                
+                // Add active class to new image and dot
+                if (this.images[this.currentIndex]) {
+                    this.images[this.currentIndex].classList.add('active');
+                }
+                if (this.dots[this.currentIndex]) {
+                    this.dots[this.currentIndex].classList.add('active');
+                }
+            }
+            
+            nextSlide() {
+                const nextIndex = (this.currentIndex + 1) % this.images.length;
+                this.goToSlide(nextIndex);
+            }
+            
+            startAutoRotate() {
+                if (this.images.length <= 1) return; // Don't auto-rotate if only one image
+                
+                this.stopAutoRotate(); // Clear any existing interval
+                this.autoRotateInterval = setInterval(() => {
+                    this.nextSlide();
+                }, 4000); // Change image every 4 seconds
+            }
+            
+            stopAutoRotate() {
+                if (this.autoRotateInterval) {
+                    clearInterval(this.autoRotateInterval);
+                    this.autoRotateInterval = null;
+                }
+            }
+            
+            // Method to add new images dynamically
+            addImage(filename) {
+                this.imageFiles.push(filename);
+                this.refreshShowcase();
+            }
+            
+            // Method to remove images
+            removeImage(filename) {
+                const index = this.imageFiles.indexOf(filename);
+                if (index > -1) {
+                    this.imageFiles.splice(index, 1);
+                    this.refreshShowcase();
+                }
+            }
+            
+            // Refresh the showcase after adding/removing images
+            async refreshShowcase() {
+                // Clear existing content
+                document.getElementById('imageShowcase').innerHTML = '';
+                document.getElementById('navigationDots').innerHTML = '';
+                this.images = [];
+                this.dots = [];
+                this.currentIndex = 0;
+                
+                // Reload everything
+                await this.loadImages();
+                this.createNavigationDots();
+                this.setupEventListeners();
+                this.startAutoRotate();
+            }
+        }
+        
+        // Initialize the showcase when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.showcase = new ImageShowcase();
+        });
+    </script>
+</body>
+
 </html>
